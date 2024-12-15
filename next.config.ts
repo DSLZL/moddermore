@@ -1,5 +1,6 @@
 import { withPlausibleProxy } from "next-plausible";
 import makeBundleAnalyzer from "@next/bundle-analyzer";
+import type { NextConfig } from "next";
 
 const withBundleAnalyzer = makeBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -52,8 +53,7 @@ const securityHeaders = [
   },
 ];
 
-/** @type {import('next').NextConfig} */
-const nextConfig = withPlausibleProxy()(
+const nextConfig: NextConfig = withPlausibleProxy()(
   withBundleAnalyzer({
     reactStrictMode: true,
     images: {
@@ -64,17 +64,38 @@ const nextConfig = withPlausibleProxy()(
       optimizePackageImports: ["lucide-react", "@tremor/react", "date-fns"],
     },
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     async headers() {
-      if (process.env.NODE_ENV === "development") return [];
-
       return [
-        {
-          source: "/:path*",
-          headers: securityHeaders,
-        },
+        ...(process.env.NODE_ENV === "production"
+          ? [
+              {
+                source: "/:path*",
+                headers: securityHeaders,
+              },
+            ]
+          : []),
+
+        ...[
+          "/(lists|likes|account|new)",
+          "/new/(.*)",
+          "/auth/(.*)",
+          "/api/(.*)",
+          "/list/:id/analytics",
+          "/list/:id/settings",
+        ].map((source) => ({
+          source,
+          headers: [
+            {
+              key: "x-robots-tag",
+              value: "noindex",
+            },
+          ],
+        })),
       ];
     },
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     async redirects() {
       return [
         {
@@ -105,6 +126,7 @@ const nextConfig = withPlausibleProxy()(
       ];
     },
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     async rewrites() {
       return [
         {

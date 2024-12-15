@@ -1,4 +1,4 @@
-import { NextMiddleware, NextResponse } from "next/server";
+import { type NextMiddleware, NextResponse } from "next/server";
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { kv } from "@vercel/kv";
@@ -13,7 +13,7 @@ export const config = {
 };
 
 const middleware: NextMiddleware = async (request, event) => {
-  const ip = request.ip ?? "127.0.0.1";
+  const ip = request.headers.get("x-real-ip") ?? "127.0.0.1";
 
   const { success, pending, limit, reset, remaining } = await ratelimit.limit(ip);
   event.waitUntil(pending);
