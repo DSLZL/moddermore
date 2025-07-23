@@ -13,7 +13,7 @@ const h = async (req: Request) => {
   }
 
   if (!new URL(originalURL).hostname.endsWith("forgecdn.net")) {
-    return new Response("only forgecdn.net links work", {
+    return new Response("only allowed hosts are permitted", {
       status: 400,
       headers: { "content-type": "text/plain" },
     });
